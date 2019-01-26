@@ -1,2 +1,4 @@
 services/node_modules
-services/.env
+aleksecurity/node_modules
+
+.env
