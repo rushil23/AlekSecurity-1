@@ -1,14 +1,35 @@
-const http = require("http");
+const express = require("express");
+var firebase = require("firebase");
 
-const hostname = "127.0.0.1";
-const port = 3000;
+require("dotenv").config();
 
-const server = http.createServer((req, res) => {
-  res.statusCode = 200;
-  res.setHeader("Content-Type", "text/plain");
-  res.end("Hello World\n");
+const app = express();
+const bodyParser = require("body-parser");
+const port = process.env.PORT || 3000;
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+var config = {
+  apiKey: process.env.API_KEY,
+  authDomain: "aleksecurity.firebaseapp.com",
+  databaseURL: "https://aleksecurity.firebaseio.com",
+  projectId: "aleksecurity",
+  storageBucket: "aleksecurity.appspot.com",
+  messagingSenderId: "840580222472"
+};
+firebase.initializeApp(config);
+
+var db = firebase.database();
+
+app.get("/", (req, res) => {
+  db.ref("/Matt")
+    .once("value")
+    .then(snapshot => {
+      res.send(snapshot.val());
+    });
 });
 
-server.listen(port, hostname, () => {
-  console.log(`Server running at http://${hostname}:${port}/`);
+app.listen(port, () => {
+  console.log("Server is running. Port: ", port);
 });
