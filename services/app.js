@@ -30,6 +30,11 @@ var config = {
   messagingSenderId: "840580222472"
 };
 
+function verifyTwoIds(id1,id2){
+  console.log("Comparing "+id1+" and "+id2);
+}
+
+
 firebase.initializeApp(config);
 
 var db = firebase.database();
@@ -40,7 +45,7 @@ var dbRefUsers = db.ref("/users");//.child("users"); // Reference to current use
 db.ref("/current").on("value", snapshot => {
   if (snapshot.val()) {
     console.log("\n\nThere is a new user at door! " + snapshot.val()["currentUserAtDoor"]);
-    
+    var currentUser = snapshot.val()["currentUserAtDoor"];
     return dbRefUsers.once('value').then(function(userSnapshot) {
       var userData = userSnapshot.val();
 
@@ -50,8 +55,13 @@ db.ref("/current").on("value", snapshot => {
       for(var key in userData){
 
         console.log("The key is: "+key+" and the value is: "+userData[key]);
+        verifyTwoIds(currentUser,userData[key]);
+
+
 
       }
+
+
 
       
     
