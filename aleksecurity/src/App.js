@@ -3,6 +3,7 @@ import Webcam from "react-webcam";
 import firebase from "firebase";
 import $ from "jquery";
 
+var Blob = require("blob");
 require("dotenv").config();
 
 var config = {
@@ -19,6 +20,31 @@ firebase.initializeApp(config);
 var db = firebase.database();
 var storage = firebase.storage();
 
+var makeblob = dataURL => {
+  console.log("Blob");
+
+  var BASE64_MARKER = ";base64,";
+  if (dataURL.indexOf(BASE64_MARKER) == -1) {
+    var parts = dataURL.split(",");
+    var contentType = parts[0].split(":")[1];
+    var raw = decodeURIComponent(parts[1]);
+    return new Blob([raw], { type: "image/jpeg" });
+  }
+  var parts = dataURL.split(BASE64_MARKER);
+  var contentType = parts[0].split(":")[1];
+  var raw = window.atob(parts[1]);
+  var rawLength = raw.length;
+
+  var uInt8Array = new Uint8Array(rawLength);
+
+  for (var i = 0; i < rawLength; ++i) {
+    uInt8Array[i] = raw.charCodeAt(i);
+  }
+
+  // console.log(new Blob([uInt8Array], { type: "image/jpeg" }));
+  return new Blob([uInt8Array], { type: "image/jpeg" });
+};
+
 class App extends Component {
   setRef = webcam => {
     this.webcam = webcam;
@@ -26,43 +52,24 @@ class App extends Component {
 
   capture = () => {
     const imageString = this.webcam.getScreenshot();
-    const image = imageString.replace("data:image/jpeg;base64,", "");
 
-    const uploadTask = storage
-      .ref("requests/personAtDoor")
-      .putString(image, "base64");
-
-    uploadTask.on(
-      "state_changed",
-      snapshot => {},
-      error => {
-        console.log(error);
-      },
-      () => {
-        storage
-          .ref("requests")
-          .child("personAtDoor")
-          .getDownloadURL()
-          .then(url => {
-            console.log(url);
-          });
-      }
-    );
+    console.log("Capture");
+    return imageString;
   };
 
   setFalse = () => {
-    db.ref("/pic").set({
-      take: false
+    db.ref("/takePic").set({
+      value: false
     });
   };
 
   setTrue = () => {
-    db.ref("/pic").set({
-      take: true
+    db.ref("/takePic").set({
+      value: true
     });
   };
 
-  // Testing Azure face api call
+  // Azure API call
   processing = () => {
     var subscriptionKey = process.env.REACT_APP_AZURE_API_KEY;
     var uriBase =
@@ -74,42 +81,74 @@ class App extends Component {
         "age,gender,headPose,smile,facialHair,glasses,emotion," +
         "hair,makeup,occlusion,accessories,blur,exposure,noise"
     };
+
     $.ajax({
       url: uriBase + "?" + $.param(params),
 
       beforeSend: function(xhrObj) {
-        xhrObj.setRequestHeader("Content-Type", "application/json");
+        xhrObj.setRequestHeader("Content-Type", "application/octet-stream");
         xhrObj.setRequestHeader("Ocp-Apim-Subscription-Key", subscriptionKey);
       },
 
       type: "POST",
+      processData: false,
+      contentType: "application/octet-stream",
 
-      data:
-        '{"url": ' +
-        '"' +
-        "https://upload.wikimedia.org/wikipedia/commons/c/c3/RH_Louise_Lillian_Gish.jpg" +
-        '"}'
+      // data:
+      //   '{"url": ' +
+      //   '"' +
+      //   "https://upload.wikimedia.org/wikipedia/commons/c/c3/RH_Louise_Lillian_Gish.jpg" +
+      //   '"}'
+
+      data: makeblob(this.capture())
     })
       .done(function(data) {
-        console.log(data);
+        // console.log(data[0].faceId); //[0].faceId);
+        console.log("step 1");
+
+        db.ref("/current").set({
+          currentUserAtDoor: data[0].faceId
+        });
+
+        // this.uploadId(data[0].faceId);
       })
       .fail(function(data) {
         console.log("wtf");
       });
   };
 
+  saveUser = () => {
+    // saveUser/name
+    // saveUser/value
+    // current/currentUserAtDoor
+  };
+
   componentWillMount() {
-    db.ref("/pic/take").on("value", snapshot => {
+    // If user asks Alexa who is at the door, this boolean value will change and will trigger an image to be taken and sent to firebase
+    db.ref("/takePic/value").on("value", snapshot => {
       if (snapshot.val() == true) {
-        console.log("Current value: " + snapshot.val());
-        this.capture();
+        console.log("Take Pic: " + snapshot.val());
+        this.processing();
         this.setFalse();
+      }
+    });
+
+    // If user asks Alexa to save a user
+    db.ref("/saveUser/value").on("value", snapshot => {
+      if (snapshot.val() == true) {
+        console.log("Save User: " + snapshot.val());
+        this.saveUser();
+        // Set false
       }
     });
   }
 
+  componentDidMount() {
+    // console.log(this.capture());
+  }
+
   componentWillUnmount() {
-    this.db.ref("/pic/take").off();
+    this.db.ref("/takePic").off();
   }
 
   render() {
