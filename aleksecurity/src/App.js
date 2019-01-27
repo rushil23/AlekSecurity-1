@@ -1,12 +1,12 @@
 import React, { Component } from "react";
 import Webcam from "react-webcam";
 import firebase from "firebase";
-import processing from "./api/processing";
+import $ from "jquery";
 
 require("dotenv").config();
 
 var config = {
-  apiKey: process.env.API_KEY,
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
   authDomain: "aleksecurity.firebaseapp.com",
   databaseURL: "https://aleksecurity.firebaseio.com",
   projectId: "aleksecurity",
@@ -62,6 +62,42 @@ class App extends Component {
     });
   };
 
+  // Testing Azure face api call
+  processing = () => {
+    var subscriptionKey = process.env.REACT_APP_AZURE_API_KEY;
+    var uriBase =
+      "https://canadacentral.api.cognitive.microsoft.com/face/v1.0/detect";
+    var params = {
+      returnFaceId: "true",
+      returnFaceLandmarks: "false",
+      returnFaceAttributes:
+        "age,gender,headPose,smile,facialHair,glasses,emotion," +
+        "hair,makeup,occlusion,accessories,blur,exposure,noise"
+    };
+    $.ajax({
+      url: uriBase + "?" + $.param(params),
+
+      beforeSend: function(xhrObj) {
+        xhrObj.setRequestHeader("Content-Type", "application/json");
+        xhrObj.setRequestHeader("Ocp-Apim-Subscription-Key", subscriptionKey);
+      },
+
+      type: "POST",
+
+      data:
+        '{"url": ' +
+        '"' +
+        "https://upload.wikimedia.org/wikipedia/commons/c/c3/RH_Louise_Lillian_Gish.jpg" +
+        '"}'
+    })
+      .done(function(data) {
+        console.log(data);
+      })
+      .fail(function(data) {
+        console.log("wtf");
+      });
+  };
+
   componentWillMount() {
     db.ref("/pic/take").on("value", snapshot => {
       if (snapshot.val() == true) {
@@ -70,9 +106,6 @@ class App extends Component {
         this.setFalse();
       }
     });
-
-    console.log(process.env.API_KEY);
-    console.log(process.env.AZURE_API_KEY);
   }
 
   componentWillUnmount() {
@@ -104,6 +137,9 @@ class App extends Component {
         </div>
         <div>
           <button onClick={this.setTrue}>Set true</button>
+        </div>
+        <div>
+          <button onClick={this.processing}>Processing</button>
         </div>
       </div>
     );

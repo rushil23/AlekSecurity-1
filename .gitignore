@@ -2,4 +2,4 @@ services/node_modules
 aleksecurity/node_modules
 alexa/node_modules
 
-.env
+aleksecurity/.env
