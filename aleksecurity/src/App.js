@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import Webcam from "react-webcam";
 import firebase from "firebase";
+import processing from "./api/processing";
 
 require("dotenv").config();
 
@@ -69,6 +70,9 @@ class App extends Component {
         this.setFalse();
       }
     });
+
+    console.log(process.env.API_KEY);
+    console.log(process.env.AZURE_API_KEY);
   }
 
   componentWillUnmount() {
