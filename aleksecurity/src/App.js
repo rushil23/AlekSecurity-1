@@ -15,7 +15,7 @@ var config = {
 
 firebase.initializeApp(config);
 
-var storageRef = firebase.storage().ref();
+var storage = firebase.storage();
 
 class App extends Component {
   setRef = webcam => {
@@ -23,7 +23,34 @@ class App extends Component {
   };
 
   capture = () => {
-    const imageSrc = this.webcam.getScreenshot();
+    const imageString = this.webcam.getScreenshot();
+    console.log(imageString);
+
+    const image = imageString.replace("data:image/jpeg;base64,", "");
+    console.log(image);
+
+    // const uploadTask = storage.ref(`current/testImage`).put(imageSrc);
+
+    const uploadTask = storage
+      .ref("existing/testImage")
+      .putString(image, "base64");
+
+    uploadTask.on(
+      "state_changed",
+      snapshot => {},
+      error => {
+        console.log(error);
+      },
+      () => {
+        storage
+          .ref("existing")
+          .child("testImage")
+          .getDownloadURL()
+          .then(url => {
+            console.log(url);
+          });
+      }
+    );
   };
 
   render() {
