@@ -3,6 +3,11 @@ import Webcam from "react-webcam";
 import firebase from "firebase";
 import $ from "jquery";
 
+const style = {
+  "font-family": "Verdana",
+  "text-align": "center"
+};
+
 var Blob = require("blob");
 require("dotenv").config();
 
@@ -170,16 +175,17 @@ class App extends Component {
     };
 
     return (
-      <div>
+      <div style={style}>
+        AlekSecurity
         <Webcam
           audio={false}
-          //   height={350}
+          // width={`90%`}
           ref={this.setRef}
           screenshotFormat="image/jpeg"
-          //   width={350}
+          width={`100%`}
           videoConstraints={videoConstraints}
         />
-        <div>
+        {/* <div>
           <button onClick={this.capture}>Capture photo</button>
         </div>
         <div>
@@ -190,7 +196,7 @@ class App extends Component {
         </div>
         <div>
           <button onClick={this.processing}>Processing</button>
-        </div>
+        </div> */}
       </div>
     );
   }
