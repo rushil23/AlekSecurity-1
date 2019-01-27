@@ -15,6 +15,7 @@ var config = {
 
 firebase.initializeApp(config);
 
+var db = firebase.database();
 var storage = firebase.storage();
 
 class App extends Component {
@@ -24,15 +25,10 @@ class App extends Component {
 
   capture = () => {
     const imageString = this.webcam.getScreenshot();
-    console.log(imageString);
-
     const image = imageString.replace("data:image/jpeg;base64,", "");
-    console.log(image);
-
-    // const uploadTask = storage.ref(`current/testImage`).put(imageSrc);
 
     const uploadTask = storage
-      .ref("existing/testImage")
+      .ref("requests/personAtDoor")
       .putString(image, "base64");
 
     uploadTask.on(
@@ -43,8 +39,8 @@ class App extends Component {
       },
       () => {
         storage
-          .ref("existing")
-          .child("testImage")
+          .ref("requests")
+          .child("personAtDoor")
           .getDownloadURL()
           .then(url => {
             console.log(url);
@@ -52,6 +48,32 @@ class App extends Component {
       }
     );
   };
+
+  setFalse = () => {
+    db.ref("/pic").set({
+      take: false
+    });
+  };
+
+  setTrue = () => {
+    db.ref("/pic").set({
+      take: true
+    });
+  };
+
+  componentWillMount() {
+    db.ref("/pic/take").on("value", snapshot => {
+      if (snapshot.val() == true) {
+        console.log("Current value: " + snapshot.val());
+        this.capture();
+        this.setFalse();
+      }
+    });
+  }
+
+  componentWillUnmount() {
+    this.db.ref("/pic/take").off();
+  }
 
   render() {
     const videoConstraints = {
@@ -72,6 +94,12 @@ class App extends Component {
         />
         <div>
           <button onClick={this.capture}>Capture photo</button>
+        </div>
+        <div>
+          <button onClick={this.setFalse}>Set false</button>
+        </div>
+        <div>
+          <button onClick={this.setTrue}>Set true</button>
         </div>
       </div>
     );
