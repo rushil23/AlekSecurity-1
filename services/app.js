@@ -1,6 +1,17 @@
 const express = require("express");
 var firebase = require("firebase");
+// var storage = require("firebase/storage");
+// import firebase from "firebase";
 
+/*
+
+
+* - To Do: 
+
+1. Get face ID from Firebase Database
+2. Send each face ID
+
+*/
 require("dotenv").config();
 
 const app = express();
@@ -18,18 +29,56 @@ var config = {
   storageBucket: "aleksecurity.appspot.com",
   messagingSenderId: "840580222472"
 };
+
 firebase.initializeApp(config);
 
 var db = firebase.database();
+//console.log(db);
 
-app.get("/", (req, res) => {
-  db.ref("/Matt")
-    .once("value")
-    .then(snapshot => {
-      res.send(snapshot.val());
-    });
+var dbRefUsers = db.ref("/users");//.child("users"); // Reference to current users list
+
+db.ref("/current").on("value", snapshot => {
+  if (snapshot.val()) {
+    console.log("\n\nThere is a new user at door! " + snapshot.val()["currentUserAtDoor"]);
+    
+    return dbRefUsers.once('value').then(function(userSnapshot) {
+      var userData = userSnapshot.val();
+
+      console.log("The user data is : ");
+      console.log(userData);
+    
+      for(var key in userData){
+
+        console.log("The key is: "+key+" and the value is: "+userData[key]);
+
+      }
+
+      
+    
+    
+    
+    })
+
+  }
 });
+
+
+return 
+
+
+
+
+
+// var storage = firebase.storage();
 
 app.listen(port, () => {
   console.log("Server is running. Port: ", port);
 });
+
+// app.get('/upload_image', (req, res, next) => {
+//   console.log({ files: req.files });
+// })
+
+// storage.ref("existing").child("personAtDoor").getDownloadURL().then(url => {
+//   console.log(url);
+// })
