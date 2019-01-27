@@ -1,10 +1,8 @@
 /* eslint-disable  func-names */
 /* eslint-disable  no-console */
 
+// const firebase = require('firebase');
 const SKILL_NAME = 'Door Query';
-const GET_FACT_MESSAGE = 'Here\'s your fact: ';
-const HELP_MESSAGE = 'You can say tell me a space fact, or, you can say exit... What can I help you with?';
-const HELP_REPROMPT = 'What can I help you with?';
 const RECOGNIZED_FACE = 'The person at the door is: ';
 const DOES_NOT_RECOGNIZE = 'I don\'t recognize this person';
 const ASK_OPEN = 'Should I open the door?';
@@ -14,6 +12,20 @@ const STOP_MESSAGE = 'Goodbye!';
 
 const Alexa = require('ask-sdk');
 
+// var config = {
+//   apiKey: process.env.API_KEY,
+//   authDomain: "aleksecurity.firebaseapp.com",
+//   databaseURL: "https://aleksecurity.firebaseio.com",
+//   projectId: "aleksecurity",
+//   storageBucket: "aleksecurity.appspot.com",
+//   messagingSenderId: "840580222472"
+// };
+
+// firebase.initializeApp(config);
+
+// var db = firebase.database();
+// console.log(db);
+
 const WhoIsAtDoorHandler = {
   canHandle(handlerInput) {
     const request = handlerInput.requestEnvelope.request;
@@ -22,17 +34,28 @@ const WhoIsAtDoorHandler = {
         && request.intent.name === 'WhosAtTheDoorIntent');
   },
   handle(handlerInput) {
-    // const factArr = data;
-    // const factIndex = Math.floor(Math.random() * factArr.length);
-    // const randomFact = factArr[factIndex];
     const speechOutput = RECOGNIZED_FACE;
 
     return handlerInput.responseBuilder
-      .speak(speechOutput)
+      //TODO: output name of person from database with `speechOutput`
+      .speak(speechOutput) 
       .withSimpleCard(SKILL_NAME, speechOutput)
       .getResponse();
   },
 };
+
+const TakePictureHandler = {
+  canHandle(handlerInput) {
+    const request = handlerInput.requestEnvelope.request;
+    return request.type === 'LaunchRequest' || 
+    (request.intent.name === 'IntentRequest' &&
+    request.intent.name === 'TakePictureIntent');
+  },
+  handle(handlerInput) {
+    //TODO: take picture of person
+    
+  }
+}
 
 const ErrorHandler = {
   canHandle() {
