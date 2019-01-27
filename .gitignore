@@ -3,3 +3,4 @@ aleksecurity/node_modules
 alexa/node_modules
 
 aleksecurity/.env
+services/.env
