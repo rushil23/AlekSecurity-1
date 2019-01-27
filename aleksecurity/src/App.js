@@ -41,7 +41,6 @@ var makeblob = dataURL => {
     uInt8Array[i] = raw.charCodeAt(i);
   }
 
-  // console.log(new Blob([uInt8Array], { type: "image/jpeg" }));
   return new Blob([uInt8Array], { type: "image/jpeg" });
 };
 
@@ -57,8 +56,8 @@ class App extends Component {
     return imageString;
   };
 
-  setFalse = () => {
-    db.ref("/takePic").set({
+  setFalse = field => {
+    db.ref(`${field}`).update({
       value: false
     });
   };
@@ -70,7 +69,7 @@ class App extends Component {
   };
 
   // Azure API call
-  processing = () => {
+  processing = (takePic, saveUser) => {
     var subscriptionKey = process.env.REACT_APP_AZURE_API_KEY;
     var uriBase =
       "https://canadacentral.api.cognitive.microsoft.com/face/v1.0/detect";
@@ -106,9 +105,31 @@ class App extends Component {
         // console.log(data[0].faceId); //[0].faceId);
         console.log("step 1");
 
-        db.ref("/current").set({
-          currentUserAtDoor: data[0].faceId
-        });
+        if (takePic) {
+          db.ref("/current").set({
+            currentUserAtDoor: data[0].faceId
+          });
+        }
+
+        if (saveUser) {
+          let name;
+          let faceId;
+
+          db.ref("/saveUser").update({
+            newFaceId: data[0].faceId
+          });
+
+          db.ref("/saveUser").once("value", snapshot => {
+            console.log("bless");
+            name = snapshot.val().name;
+            faceId = snapshot.val().newFaceId;
+
+            console.log("FaceID " + faceId);
+            var temp = {};
+            temp[name] = faceId;
+            db.ref("/users").update(temp);
+          });
+        }
 
         // this.uploadId(data[0].faceId);
       })
@@ -117,19 +138,13 @@ class App extends Component {
       });
   };
 
-  saveUser = () => {
-    // saveUser/name
-    // saveUser/value
-    // current/currentUserAtDoor
-  };
-
   componentWillMount() {
     // If user asks Alexa who is at the door, this boolean value will change and will trigger an image to be taken and sent to firebase
     db.ref("/takePic/value").on("value", snapshot => {
       if (snapshot.val() == true) {
         console.log("Take Pic: " + snapshot.val());
-        this.processing();
-        this.setFalse();
+        this.processing(true, false);
+        this.setFalse("/takePic");
       }
     });
 
@@ -137,14 +152,10 @@ class App extends Component {
     db.ref("/saveUser/value").on("value", snapshot => {
       if (snapshot.val() == true) {
         console.log("Save User: " + snapshot.val());
-        this.saveUser();
-        // Set false
+        this.processing(false, true);
+        this.setFalse("/saveUser");
       }
     });
-  }
-
-  componentDidMount() {
-    // console.log(this.capture());
   }
 
   componentWillUnmount() {
