@@ -10,6 +10,7 @@ An Amazon Alexa project that identifies who has arrived at your door using Micro
 
 ### Technologies
 - Alexa Skills Kit SDK
+- AWS Lambda
 - Microsoft Azure Face Recognition API
 - Firebase
 - Node.js
